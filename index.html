@@ -1,0 +1,1577 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>英文單字速記卡 - 中小學必備單字速記神器</title>
+  
+  <!-- tailwindcss v3.4.15 and font -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+  
+  <!-- Vue 3 CDN (For state management without React bundling latency) -->
+  <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+
+  <style>
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+    }
+    .heading-font {
+      font-family: 'Space Grotesk', sans-serif;
+    }
+    .mono-font {
+      font-family: 'JetBrains Mono', monospace;
+    }
+    
+    /* Elegant card flip styling */
+    .perspective-1000 {
+      perspective: 1000px;
+    }
+    .preserve-3d {
+      transform-style: preserve-3d;
+    }
+    .backface-hidden {
+      backface-visibility: hidden;
+    }
+    .rotate-y-180 {
+      transform: rotateY(180deg);
+    }
+    
+    /* Scrollbar Styling */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #CBD5E1;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94A3B8;
+    }
+  </style>
+</head>
+<body class="bg-[#F8FAFC] text-slate-800 min-h-screen flex items-center justify-center p-2 sm:p-4">
+
+  <div id="app" class="w-full max-w-md bg-white border-4 border-[#1E293B] rounded-[32px] shadow-[8px_8px_0px_#1E293B] overflow-hidden flex flex-col h-[780px] relative">
+    
+    <!-- Top Decorative Status Bar -->
+    <header class="bg-amber-100 border-b-4 border-[#1E293B] px-5 py-3 flex justify-between items-center shrink-0">
+      <div class="flex items-center gap-1.5">
+        <span class="text-xl">⚡</span>
+        <div>
+          <h1 class="font-extrabold text-[#1E293B] text-sm tracking-wide">單字速記卡 APP</h1>
+          <p class="text-[10px] text-slate-500 font-bold heading-font uppercase">Junior & Elem Speed Cards</p>
+        </div>
+      </div>
+      
+      <!-- Stars badge with tooltip alert -->
+      <div class="flex items-center gap-2">
+        <div class="bg-amber-100 border-2 border-[#1E293B] px-2 py-0.5 rounded-xl flex items-center gap-1 cursor-pointer hover:scale-105 transition-transform" 
+             @click="alertStarsRule">
+          <span class="text-xs">⭐</span>
+          <span class="text-xs font-black text-[#1E293B]">{{ stats.stars }}</span>
+        </div>
+        <div class="bg-emerald-100 border-2 border-[#1E293B] px-2 py-0.5 rounded-xl flex items-center gap-1">
+          <span class="text-[10px] font-black text-emerald-800">🔥 {{ stats.continuousDays }} 天</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Screens Container -->
+    <main class="flex-1 overflow-y-auto px-4 py-4 flex flex-col bg-[#FDFEFE]">
+
+      <!-- ================= 1. STUDY TAB ================= -->
+      <div v-if="activeTab === 'study'" class="flex-1 flex flex-col h-full">
+        
+        <!-- 1A. STUDY HOME SUBMODE (Selection / Mission Hub) -->
+        <div v-if="studySubMode === 'home'" class="flex-1 flex flex-col gap-3.5 select-none animate-[fadeIn_0.2s_ease-out]">
+          
+          <!-- 內建字庫體檢板 (Vocabulary Database Status Check) -->
+          <div class="bg-[#F0FDF4] border-2 border-[#1E293B] rounded-2xl p-3 shadow-[2px_2px_0px_#1E293B] select-none">
+            <p class="text-[10px] font-extrabold text-[#15803D] mb-1.5 uppercase tracking-wider flex items-center gap-1">
+              🔎 系統內建字庫即時檢索與體檢結果
+            </p>
+            <div class="grid grid-cols-2 gap-2 text-xs">
+              <div class="bg-white p-2.5 border-2 border-[#1E293B] rounded-xl flex flex-col justify-between">
+                <span class="text-[10px] font-bold text-slate-500">🌱 國小字庫長度</span>
+                <div class="flex items-baseline justify-between mt-1 flex-wrap gap-1">
+                  <span class="mono-font font-black text-sm text-slate-800">{{ elementaryWords.length }} 筆</span>
+                  <span v-if="elementaryWords.length < 600" class="text-[9px] font-black text-rose-600 bg-rose-50 border border-rose-300 px-1 py-0.5 rounded">國小字庫不足 🚨</span>
+                  <span v-else class="text-[9px] font-black text-emerald-600 bg-emerald-50 border border-emerald-300 px-1 py-0.5 rounded">充足 ✔</span>
+                </div>
+              </div>
+              <div class="bg-white p-2.5 border-2 border-[#1E293B] rounded-xl flex flex-col justify-between">
+                <span class="text-[10px] font-bold text-slate-500">🎓 國中字庫長度</span>
+                <div class="flex items-baseline justify-between mt-1 flex-wrap gap-1">
+                  <span class="mono-font font-black text-sm text-slate-800">{{ juniorHighWords.length }} 筆</span>
+                  <span v-if="juniorHighWords.length < 2000" class="text-[9px] font-black text-rose-600 bg-rose-50 border border-rose-300 px-1 py-0.5 rounded animate-pulse">國中字庫不足 🚨</span>
+                  <span v-else class="text-[9px] font-black text-emerald-600 bg-emerald-50 border border-emerald-300 px-1 py-0.5 rounded">充足 ✔</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Difficulty Choice Carousel -->
+          <div class="bg-slate-50 border-2 border-[#1E293B] rounded-2xl p-3 shadow-[2px_2px_0px_#1E293B]">
+            <p class="text-[10px] font-extrabold text-slate-400 mb-1.5 uppercase tracking-wider">🎯 選擇難度級別</p>
+            <div class="grid grid-cols-2 gap-2">
+              <button 
+                @click="setDifficulty('elementary')"
+                :class="selectedDifficulty === 'elementary' ? 'bg-[#93C5FD] border-[#1E293B] text-[#1E293B] font-black scale-102 shadow-[1px_2px_0px_#1E293B]' : 'bg-white text-slate-500 border-slate-200'"
+                class="py-2 px-3 text-xs border-2 rounded-xl font-bold transition-all flex items-center justify-center gap-1 cursor-pointer">
+                🌱 國小 600 字 
+              </button>
+              <button 
+                @click="setDifficulty('junior')"
+                :class="selectedDifficulty === 'junior' ? 'bg-[#A7F3D0] border-[#1E293B] text-[#1E293B] font-black scale-102 shadow-[1px_2px_0px_#1E293B]' : 'bg-white text-slate-500 border-slate-200'"
+                class="py-2 px-3 text-xs border-2 rounded-xl font-bold transition-all flex items-center justify-center gap-1 cursor-pointer">
+                🎓 國中 2000 字
+              </button>
+            </div>
+            
+            <!-- Progress Status -->
+            <div class="mt-3 bg-white border-2 border-[#1E293B] rounded-xl p-2.5">
+              <div class="flex justify-between items-center text-xs font-black text-slate-700 mb-1">
+                <span>{{ selectedDifficulty === 'elementary' ? '國小 600 字進度' : '國中 2000 字進度' }}</span>
+                <span class="mono-font text-sky-600">{{ getMasteryPercentage() }}%</span>
+              </div>
+              <div class="w-full bg-slate-100 h-2.5 rounded-full border border-slate-300 overflow-hidden">
+                <div class="bg-sky-500 h-full transition-all duration-500" :style="{ width: getMasteryPercentage() + '%' }"></div>
+              </div>
+              <div class="flex justify-between text-[10px] text-slate-400 font-bold mt-1">
+                <span>已背誦: {{ getMasteredCount() }} 字</span>
+                <span>總字數: {{ currentLevelWords.length }} 字</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Daily Challenge Deck -->
+          <div class="bg-amber-50 border-2 border-[#1E293B] rounded-2xl p-3.5 shadow-[2px_2px_0px_#1E293B]">
+            <div class="flex justify-between items-center border-b border-slate-200 pb-1.5 mb-2.5">
+              <span class="text-xs font-black text-slate-800 flex items-center gap-1">📅 今日限時目標 🎒</span>
+              <span class="text-[9px] font-bold text-amber-600 bg-amber-100 px-1.5 py-0.5 rounded">
+                每天自動更新喔！
+              </span>
+            </div>
+
+            <!-- Grid with Daily Goals -->
+            <div class="grid grid-cols-2 gap-2.5">
+              <!-- New 10 words button -->
+              <button 
+                @click="startDailyNew"
+                class="bg-white border-2 border-[#1E293B] rounded-xl p-3 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-amber-100/50 transition-all hover:scale-[1.02] shadow-[1px_2px_0px_#1E293B]">
+                <span class="text-lg mb-1">📖</span>
+                <p class="text-xs font-black text-[#1E293B]">今日 10 個新單字</p>
+                <!-- Done count badge -->
+                <span class="text-[10px] font-bold mt-1.5 px-2 py-0.5 rounded-full"
+                      :class="isDailyNewDone() ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'">
+                  {{ isDailyNewDone() ? '已挑戰 ✅' : '點此出發 🚀' }}
+                </span>
+              </button>
+
+              <!-- Review 10 words button -->
+              <button 
+                @click="startDailyReview"
+                class="bg-white border-2 border-[#1E293B] rounded-xl p-3 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-[#EFF6FF] transition-all hover:scale-[1.02] shadow-[1px_2px_0px_#1E293B]">
+                <span class="text-lg mb-1">🔄</span>
+                <p class="text-xs font-black text-[#1E293B]">今日 10 個複習單字</p>
+                <!-- Done count badge -->
+                <span class="text-[10px] font-bold mt-1.5 px-2 py-0.5 rounded-full"
+                      :class="isDailyReviewDone() ? 'bg-emerald-100 text-emerald-800' : 'bg-blue-100 text-blue-800'">
+                  {{ isDailyReviewDone() ? '已複習 ✅' : '點此大腦鍛鍊 ✨' }}
+                </span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Free Study Deck Card -->
+          <div class="flex-1 border-2 border-[#1E293B] rounded-2xl p-3 shadow-[2px_2px_0px_#1E293B] bg-white flex flex-col justify-between">
+            <div>
+              <p class="text-[10px] font-extrabold text-slate-400 mb-1.5 uppercase tracking-wider">🌟 自由全字庫學習</p>
+              <h4 class="text-xs font-black text-slate-700">想要用卡片模式背完所有單字？</h4>
+              <p class="text-[10px] text-slate-400 mt-0.5">免下載、點擊下方按鈕即可進入整套單字的卡片閃記卡！</p>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-2 mt-3">
+              <button 
+                @click="startFlashcards('eng-to-chi')"
+                class="py-2.5 px-2 text-[11px] font-black border-2 border-slate-900 rounded-xl bg-violet-100 hover:bg-violet-200 text-violet-900 shadow-[1px_2px_0px_#1E293B] cursor-pointer transition-transform hover:scale-101">
+                🔠 英文 ➔ 中文卡片
+              </button>
+              <button 
+                @click="startFlashcards('chi-to-eng')"
+                class="py-2.5 px-2 text-[11px] font-black border-2 border-slate-900 rounded-xl bg-fuchsia-100 hover:bg-fuchsia-200 text-[#1E293B] shadow-[1px_2px_0px_#1E293B] cursor-pointer transition-transform hover:scale-101">
+                🏮 中文 ➔ 英文卡片
+              </button>
+            </div>
+          </div>
+
+          <!-- Quick access of "Forgotten words" -->
+          <button 
+            @click="startUnknownList"
+            class="bg-red-50 hover:bg-red-100 border-2 border-[#1E293B] rounded-xl p-2.5 flex items-center justify-between shadow-[2px_2px_0px_#1E293B] cursor-pointer min-h-[46px] transition-all">
+            <div class="flex items-center gap-2">
+              <span class="text-base text-red-500">❌</span>
+              <span class="text-xs font-extrabold text-red-900">檢視我的「忘記 / 標記不會」單字清單</span>
+            </div>
+            <span class="bg-red-200 text-red-800 text-xs font-black px-2 py-0.5 rounded-full mono-font">
+              {{ getUnknownWordsCount() }}
+            </span>
+          </button>
+        </div>
+
+        <!-- 1B. ACTIVE FLASHCARD Decks (Eng to Chi & Chi to Eng) -->
+        <div v-else-if="studySubMode === 'eng-to-chi' || studySubMode === 'chi-to-eng'" class="flex-1 flex flex-col gap-4">
+          <div class="flex justify-between items-center border-b border-slate-200 pb-2">
+            <button 
+              @click="backToHome"
+              class="py-1 px-3 text-xs bg-slate-100 border-2 border-[#1E293B] rounded-lg font-black hover:bg-slate-200 transition-all cursor-pointer">
+              ⬅️ 返回首頁
+            </button>
+            <span class="text-xs font-black text-slate-500">
+              卡片學習中 ({{ cardIndex + 1 }} / {{ activeFlashcards.length }})
+            </span>
+          </div>
+
+          <div v-if="activeFlashcards.length === 0" class="py-12 text-center text-slate-500 flex flex-col items-center">
+            <span class="text-4xl mb-2">⚠️</span>
+            <p class="font-bold">目前無此等級字卡</p>
+            <p class="text-xs text-slate-400 mt-1">可以先在下方「單字庫」點擊查看喔！</p>
+          </div>
+
+          <div v-else class="flex-1 flex flex-col gap-4">
+            
+            <!-- ProgressBar -->
+            <div class="w-full bg-slate-100 h-1 rounded-full overflow-hidden">
+              <div class="bg-sky-500 h-full transition-all" :style="{ width: ((cardIndex+1) / activeFlashcards.length) * 100 + '%' }"></div>
+            </div>
+
+            <!-- FLIP FLASCHARD PLATFORM -->
+            <div @click="isFlipped = !isFlipped" 
+                 class="flex-1 perspective-1000 cursor-pointer min-h-[240px]">
+              <div class="w-full h-full duration-500 preserve-3d relative" :class="{ 'rotate-y-180': isFlipped }">
+                
+                <!-- CARD FRONT SIDE -->
+                <div class="absolute inset-0 bg-white border-4 border-[#1E293B] shadow-[4px_4px_0px_#1E293B] rounded-[24px] p-6 flex flex-col justify-between backface-hidden">
+                  
+                  <div class="flex justify-between items-start">
+                    <span class="text-[10px] uppercase font-black text-slate-400 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-full">
+                      {{ activeFlashcards[cardIndex].category || '單字學習' }}
+                    </span>
+                    <button @click.stop="speakWord(activeFlashcards[cardIndex].word)" 
+                            class="p-2 bg-slate-50 hover:bg-slate-100 border-2 border-slate-200 hover:border-slate-400 rounded-lg transition-all" title="聽發音">
+                      🔊
+                    </button>
+                  </div>
+
+                  <!-- Word display based on card directions -->
+                  <div class="text-center py-6">
+                    <h3 v-if="studySubMode === 'eng-to-chi'" class="text-3xl font-black text-[#1E293B]">
+                      {{ activeFlashcards[cardIndex].word }}
+                    </h3>
+                    <h3 v-else class="text-2xl font-black text-[#1E293B]">
+                      {{ activeFlashcards[cardIndex].translation }}
+                    </h3>
+                    
+                    <p class="text-[13px] text-sky-600 font-bold tracking-wider pt-2 opacity-80" v-if="studySubMode === 'eng-to-chi'">
+                      {{ getPhoneticDisplay(activeFlashcards[cardIndex]) }}
+                    </p>
+                  </div>
+
+                  <p class="text-[11px] text-slate-400 font-medium text-center">
+                    💡 點擊卡片任何地方可以翻面看解答喔！
+                  </p>
+                </div>
+
+                <!-- CARD BACK ANSWER SIDE -->
+                <div class="absolute inset-0 bg-amber-50/40 border-4 border-[#1E293B] shadow-[4px_4px_0px_#1E293B] rounded-[24px] p-5 flex flex-col justify-between backface-hidden rotate-y-180">
+                  
+                  <div>
+                    <div class="flex justify-between items-center border-b border-slate-200/60 pb-1.5">
+                      <span class="text-[10px] font-black text-rose-600 bg-rose-50 px-2 py-0.5 rounded">卡片解答 ✅</span>
+                      <p class="mono-font text-[11px] font-bold text-slate-500">{{ activeFlashcards[cardIndex].partOfSpeech }}</p>
+                    </div>
+
+                    <div class="py-2.5">
+                      <h4 class="text-lg font-black text-[#1E293B]">
+                        {{ activeFlashcards[cardIndex].word }} <span class="text-xs text-slate-400"> ({{ activeFlashcards[cardIndex].translation }})</span>
+                      </h4>
+                      <p class="text-[11px] text-slate-600 leading-relaxed font-semibold mt-1">
+                        {{ activeFlashcards[cardIndex].exampleSentence }}
+                      </p>
+                      <p class="text-[11px] text-slate-400 font-bold mt-0.5">
+                        {{ activeFlashcards[cardIndex].exampleTranslation }}
+                      </p>
+                    </div>
+                  </div>
+
+                  <!-- Cute mnemonic assistant -->
+                  <div class="bg-white border-2 border-[#1E293B] hover:border-amber-400 rounded-xl p-2.5 transition-colors">
+                    <p class="text-[10px] font-extrabold text-amber-600 mb-0.5">💡 諧音/快速聯想小技巧：</p>
+                    <p class="text-[10px] text-slate-600 leading-normal font-medium">
+                      {{ activeFlashcards[cardIndex].mnemonic || '多拼讀、聽幾遍發音，能協助你更快加深這款英文單字在大腦裡的印象喔！' }}
+                    </p>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            <!-- Bottom Flashcard Control Deck Tabs -->
+            <div class="flex items-center gap-3">
+              <button 
+                @click="markUnknown(activeFlashcards[cardIndex])"
+                class="flex-1 py-3 bg-red-100 hover:bg-red-200 border-2 border-[#1E293B] rounded-2xl font-black text-red-900 shadow-[2px_2px_0px_#1E293B] active:translate-y-0.5 active:shadow-[1px_1px_0px_#1E293B] transition-all text-xs cursor-pointer text-center">
+                ❌ 不太熟/忘記了
+              </button>
+              
+              <button 
+                @click="markRemembered(activeFlashcards[cardIndex])"
+                class="flex-1 py-3 bg-emerald-100 hover:bg-emerald-200 border-2 border-[#1E293B] rounded-2xl font-black text-emerald-900 shadow-[2px_2px_0px_#1E293B] active:translate-y-0.5 active:shadow-[1px_1px_0px_#1E293B] transition-all text-xs cursor-pointer text-center">
+                ✅ 記住了/很簡單
+              </button>
+            </div>
+
+            <div class="flex justify-between items-center px-1 text-[11px] text-slate-400 font-bold">
+              <button @click="prevCard" class="hover:text-slate-600" :disabled="cardIndex === 0">⬅️ 上一張</button>
+              <span>{{ cardIndex + 1 }} / {{ activeFlashcards.length }} 份</span>
+              <button @click="nextCard" class="hover:text-slate-600" :disabled="cardIndex === activeFlashcards.length - 1">下一張 ➡️</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 1C. DAILY MISSION MODES (Daily New & Daily Review) -->
+        <div v-else-if="studySubMode === 'daily-new' || studySubMode === 'daily-review'" class="flex-1 flex flex-col gap-4">
+          <div class="flex justify-between items-center border-b border-slate-200 pb-2">
+            <button 
+              @click="backToHome"
+              class="py-1 px-3 text-xs bg-slate-100 border-2 border-[#1E293B] rounded-lg font-black hover:bg-slate-200 transition-all cursor-pointer">
+              ⬅️ 返回大廳
+            </button>
+            <span class="text-xs font-black" :class="studySubMode === 'daily-new' ? 'text-amber-600' : 'text-blue-600'">
+              {{ studySubMode === 'daily-new' ? '🎒 今日新字卡挑戰' : '🔄 本週錯字複習' }}
+            </span>
+          </div>
+
+          <!-- If List is Empty -->
+          <div v-if="getCurrentDailyList().length === 0" class="py-12 bg-white border-2 border-dashed border-slate-300 rounded-2xl flex flex-col items-center justify-center text-center">
+            <span class="text-3xl mb-2">🎉</span>
+            <p class="font-extrabold text-slate-800 text-xs">恭喜！今日的任務已全部搞定！</p>
+            <p class="text-[10px] text-slate-400 mt-1">明早 00:00 會準時更新全新目標喔！</p>
+          </div>
+
+          <!-- Flashcard learning block -->
+          <div v-else class="flex-1 flex flex-col gap-4">
+            <!-- Daily Learning Progress Status bar -->
+            <div class="flex justify-between text-[11px] font-bold text-slate-400">
+              <span>進度：{{ getDailyIndex() + 1 }} / {{ getCurrentDailyList().length }}</span>
+              <span>本次任務獎勵：完成獲得 5 顆大腦星星 ⭐</span>
+            </div>
+
+            <!-- Word Card -->
+            <div class="flex-1 bg-white border-4 border-[#1E293B] rounded-3xl p-5 shadow-[4px_4px_0px_#1E293B] flex flex-col justify-between relative">
+              <div class="flex justify-between items-center">
+                <span class="text-[9px] font-black uppercase text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded">
+                  {{ getCurrentDailyWord()?.category || '常用類別' }}
+                </span>
+                <button @click="speakWord(getCurrentDailyWord()?.word)" 
+                        class="text-xs p-1 bg-slate-50 border border-slate-200 rounded">
+                  🔊 發音
+                </button>
+              </div>
+
+              <div class="text-center py-6">
+                <!-- Large English word -->
+                <h3 class="text-3xl font-black text-[#1E293B] tracking-tight">
+                  {{ getCurrentDailyWord()?.word }}
+                </h3>
+                <p class="text-[13px] text-slate-400 tracking-wide font-medium mt-1.5">
+                  {{ getCurrentDailyWord() ? getPhoneticDisplay(getCurrentDailyWord()) : '' }}
+                </p>
+
+                <!-- Show / Hide Answer panel -->
+                <div class="mt-4 border-t border-dashed border-slate-200/80 pt-4" v-if="getDailyShowTranslation()">
+                  <span class="text-[10px] font-extrabold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded">
+                    {{ getCurrentDailyWord()?.partOfSpeech }} | {{ getCurrentDailyWord()?.translation }}
+                  </span>
+                  <p class="text-xs text-slate-600 mt-2 font-medium bg-slate-50 p-2.5 rounded-xl text-left">
+                    <strong>例句:</strong> {{ getCurrentDailyWord()?.exampleSentence }}
+                    <span class="block text-slate-400 text-[10px] mt-0.5">{{ getCurrentDailyWord()?.exampleTranslation }}</span>
+                  </p>
+                </div>
+
+                <button v-else @click="setDailyShowTranslation(true)" 
+                        class="mt-4 py-2 px-6 bg-amber-200 hover:bg-amber-300 border-2 border-slate-800 text-slate-800 font-extrabold text-xs rounded-xl shadow-[1px_2px_0px_#1E293B] cursor-pointer">
+                  💡 點擊展開單字中文＆例句
+                </button>
+              </div>
+
+              <!-- Extra hint info -->
+              <div class="bg-amber-50/50 p-2 rounded-xl text-[10px] text-slate-500 font-medium">
+                {{ getCurrentDailyWord()?.mnemonic || '多發音幾次，連結英文字義聯想！' }}
+              </div>
+            </div>
+
+            <!-- Navigation Controls -->
+            <div class="flex items-center gap-2">
+              <button 
+                @click="prevDailyWord" 
+                :disabled="getDailyIndex() === 0"
+                class="px-3 py-2 text-xs font-black border-2 border-slate-800 rounded-xl bg-slate-100 disabled:opacity-40">
+                ⬅️ 前一個
+              </button>
+              
+              <button 
+                @click="markUnknown(getCurrentDailyWord())"
+                class="flex-1 py-2 text-xs font-black border-2 border-slate-800 rounded-xl bg-rose-50 text-rose-800 hover:bg-rose-100">
+                ❌ 記不熟
+              </button>
+
+              <button 
+                v-if="getDailyIndex() + 1 !== getCurrentDailyList().length"
+                @click="nextDailyWord"
+                class="px-4 py-2 text-xs font-black border-2 border-slate-800 rounded-xl bg-[#93C5FD] hover:bg-blue-400 text-slate-900">
+                下一個 ➡️
+              </button>
+
+              <button 
+                v-else
+                @click="completeDailyTask"
+                class="flex-1 py-2 text-xs font-black border-2 border-slate-800 rounded-xl bg-emerald-400 hover:bg-emerald-500 text-slate-900 shadow-[1px_2px_0px_#1E293B]">
+                🏁 完成並領星獎勵！
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 1D. UNKNOWN DECK PANEL (Forgot List) -->
+        <div v-else-if="studySubMode === 'unknown-list'" class="flex-1 flex flex-col gap-4 select-none">
+          <div class="flex justify-between items-center border-b border-slate-200 pb-2">
+            <button 
+              @click="backToHome"
+              class="py-1 px-3 text-xs bg-slate-100 border-2 border-[#1E293B] rounded-lg font-black hover:bg-slate-200 transition-all cursor-pointer">
+              ⬅️ 返回首頁
+            </button>
+            <span class="text-xs font-black text-rose-600">
+              「標記不會」單字庫 ({{ getUnknownWords().length }} 字)
+            </span>
+          </div>
+
+          <div v-if="getUnknownWords().length === 0" class="py-16 text-center text-slate-400 flex flex-col items-center justify-center">
+            <span class="text-4xl mb-2">🎉</span>
+            <p class="font-bold">非常棒！目前你沒有任何標記不會的單子！</p>
+            <p class="text-[10px] text-slate-400 mt-1">在卡片學習與挑戰時，標記「不太熟」就會記錄到這裡囉！</p>
+          </div>
+
+          <div v-else class="flex-1 flex flex-col gap-3">
+            <p class="text-[10px] text-slate-400 font-bold mb-1">
+              💡 自我磨練：點擊以下單字會發出發音，再次點選右方「學會囉 ✅」移除並轉成掌握單字！
+            </p>
+            
+            <div class="flex-1 bg-white border-2 border-slate-200 rounded-2xl p-2 overflow-y-auto max-h-[360px] flex flex-col gap-1.5">
+              <div v-for="wordObj in getUnknownWords()" :key="wordObj.id"
+                   class="bg-rose-50/50 hover:bg-rose-50 border border-rose-100 rounded-xl p-2.5 flex items-center justify-between gap-2">
+                <div @click="speakWord(wordObj.word)" class="cursor-pointer flex-1">
+                  <span class="text-xs font-black text-slate-800">{{ wordObj.word }}</span>
+                  <span class="text-[10px] font-bold text-slate-400 block">{{ wordObj.translation }} ({{ wordObj.partOfSpeech }})</span>
+                </div>
+                <button 
+                  @click="removeUnknownWord(wordObj)"
+                  class="bg-white hover:bg-emerald-50 border border-slate-300 hover:border-emerald-500 text-[10px] font-black text-emerald-600 py-1 px-2.5 rounded-lg transition-all cursor-pointer">
+                  學會囉 ✅
+                </button>
+              </div>
+            </div>
+
+            <!-- Start practice button with forgot vocab base -->
+            <button 
+              @click="startUnknownFlashcards"
+              class="w-full py-3 bg-[#93C5FD] border-2 border-slate-900 rounded-2xl font-black text-slate-900 shadow-[2px_2px_0px_#1E293B] cursor-pointer text-center text-xs">
+              🎯 開始閃卡特訓 (針對這批不熟字)
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+
+      <!-- ================= 2. WORD BANK TAB ================= -->
+      <div v-if="activeTab === 'bank'" class="flex-1 flex flex-col gap-3.5 select-none animate-[fadeIn_0.2s_ease-out]">
+        <div class="border-b border-slate-200 pb-2">
+          <h3 class="text-sm font-black text-[#1E293B]">📚 全功能多模組單字庫</h3>
+          <p class="text-[10px] text-slate-400">總共收錄了國小中 2600+ 核心生活用英文單字！</p>
+        </div>
+
+        <!-- Custom level filter selection tabs -->
+        <div class="flex gap-2">
+          <button @click="bankDifficulty = 'elementary'"
+                  :class="bankDifficulty === 'elementary' ? 'bg-[#93C5FD] border-slate-900 text-slate-900 font-black shadow-[1px_1.5px_0px_#1E293B]' : 'bg-slate-50 border-slate-200 text-slate-500'"
+                  class="flex-1 py-1.5 text-xs font-bold border-2 rounded-xl transition-all cursor-pointer">
+            🌱 國小 600 字
+          </button>
+          <button @click="bankDifficulty = 'junior'"
+                  :class="bankDifficulty === 'junior' ? 'bg-[#A7F3D0] border-slate-900 text-slate-900 font-black shadow-[1px_1.5px_0px_#1E293B]' : 'bg-slate-50 border-slate-200 text-slate-500'"
+                  class="flex-1 py-1.5 text-xs font-bold border-2 rounded-xl transition-all cursor-pointer">
+            🎓 國中 2000 字
+          </button>
+        </div>
+
+        <!-- Custom live fuzzy search bar input -->
+        <div class="relative">
+          <input 
+            type="text" 
+            v-model="searchQuery" 
+            placeholder="🔍 輸入英文單字或中文做快速搜尋..." 
+            class="w-full text-xs py-2 px-3 pl-8 bg-white border-2 border-slate-300 rounded-xl outline-none focus:border-[#1E293B]" />
+        </div>
+
+        <!-- Categorized grid count -->
+        <div class="flex justify-between items-center text-[10px] text-slate-400 font-bold px-1">
+          <span>共找到 {{ getFilteredBankWords().length }} 個單字</span>
+          <span>點擊 🔊 控制聽取美式發音</span>
+        </div>
+
+        <!-- Word dataset scrollable list cards layout -->
+        <div class="flex-1 bg-white border-2 border-slate-200 rounded-2xl p-2.5 overflow-y-auto max-h-[380px] flex flex-col gap-2">
+          
+          <div v-for="wordObj in getFilteredBankWords().slice(0, 50)" :key="wordObj.id"
+               class="border border-slate-100 rounded-xl p-2.5 hover:border-[#1E293B] group hover:bg-slate-50/50 transition-all flex items-center justify-between">
+            <div class="flex-1">
+              <div class="flex items-center gap-1.5">
+                <span class="text-xs font-black text-slate-800">{{ wordObj.word }}</span>
+                <span class="text-[9px] font-bold text-slate-400 scale-95 uppercase">{{ wordObj.partOfSpeech }}</span>
+                
+                <!-- Mastery status check -->
+                <span v-if="isWordRemembered(wordObj)" class="text-[10px] text-emerald-500" title="已記住">
+                  ✔
+                </span>
+                <span v-else-if="isWordInUnknown(wordObj)" class="text-[10px] text-rose-500" title="不熟悉">
+                  ✖
+                </span>
+              </div>
+              <p class="text-[10px] text-slate-500 mt-0.5">{{ wordObj.translation }}</p>
+              
+              <!-- Quick togglable hint -->
+              <p class="text-[9px] text-slate-400 italic mt-0.5 group-hover:text-amber-600 transition-colors">
+                💬 {{ wordObj.exampleSentence }}
+              </p>
+            </div>
+
+            <!-- Voice reader trigger -->
+            <button @click="speakWord(wordObj.word)"
+                    class="p-1.5 ml-2 hover:bg-blue-100 text-xs text-blue-800 border-2 border-transparent hover:border-blue-300 rounded-lg transition-all cursor-pointer">
+              🔊
+            </button>
+          </div>
+
+          <div v-if="getFilteredBankWords().length > 50" class="text-center py-2 text-[10px] text-slate-400 font-bold">
+            已經為您篩選並列出最前 50 筆符合的熱門結果 ✨
+          </div>
+        </div>
+
+        <!-- Dynamic Easy Word Generator Form Box -->
+        <div class="bg-indigo-50/50 border-2 border-dashed border-indigo-200 rounded-2xl p-3">
+          <p class="text-[10px] font-black text-indigo-700">✍ 新增自訂小筆記單字</p>
+          <div class="flex gap-1.5 mt-2">
+            <input type="text" v-model="customInputWord" placeholder="英文例如 banana" class="flex-1 text-xs py-1.5 px-3 bg-white border border-slate-300 rounded" />
+            <input type="text" v-model="customInputTranslation" placeholder="中文例如 香蕉" class="flex-1 text-xs py-1.5 px-3 bg-white border border-slate-300 rounded" />
+            <button @click="addCustomWord" class="py-1.5 px-3 bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] font-black rounded cursor-pointer">
+              新增 🌟
+            </button>
+          </div>
+        </div>
+      </div>
+
+
+      <!-- ================= 3. QUIZ TAB ================= -->
+      <div v-if="activeTab === 'quiz'" class="flex-1 flex flex-col gap-3.5 select-none animate-[fadeIn_0.2s_ease-out]">
+        
+        <!-- Welcome Hub Screen -->
+        <div v-if="!quizActive && !quizFinished" class="flex-1 flex flex-col justify-between py-2">
+          
+          <div class="space-y-3">
+            <div class="border-b border-slate-200 pb-2">
+              <h3 class="text-sm font-black text-[#1E293B]">隨堂智力考單字 🧠</h3>
+              <p class="text-[10px] text-slate-400">大腦肌肉訓練！隨機從單字庫中抽取題庫進行多重選擇與拼寫！</p>
+            </div>
+
+            <div class="bg-sky-50 border-2 border-[#1E293B] rounded-2xl p-4 shadow-[2px_2px_0px_#1E293B]">
+              <h4 class="text-xs font-black text-sky-800 mb-1.5 flex items-center gap-1">🏆 考試設定</h4>
+              
+              <div class="space-y-3">
+                <!-- Level -->
+                <div>
+                  <p class="text-[10px] font-bold text-slate-400 uppercase mb-1">對象難度</p>
+                  <div class="flex gap-2">
+                    <button @click="quizDifficulty = 'elementary'"
+                            :class="quizDifficulty === 'elementary' ? 'bg-[#93C5FD] border-slate-900 text-slate-900 font-black' : 'bg-white text-slate-400 border-slate-200'"
+                            class="flex-1 py-1.5 text-xs border rounded-xl cursor-pointer">
+                      🌱 國小階段
+                    </button>
+                    <button @click="quizDifficulty = 'junior'"
+                            :class="quizDifficulty === 'junior' ? 'bg-[#A7F3D0] border-slate-900 text-slate-900 font-black' : 'bg-white text-slate-400 border-slate-200'"
+                            class="flex-1 py-1.5 text-xs border rounded-xl cursor-pointer">
+                      🎓 國中階段
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Type -->
+                <div>
+                  <p class="text-[10px] font-bold text-slate-400 uppercase mb-1">測驗題型</p>
+                  <div class="grid grid-cols-2 gap-2">
+                    <button @click="quizType = 'choice'"
+                            :class="quizType === 'choice' ? 'bg-indigo-200 border-slate-900 text-slate-900 font-bold' : 'bg-white text-slate-400 border-slate-200'"
+                            class="py-1.5 text-xs border rounded-xl cursor-pointer">
+                      🏮 核心多重選擇題
+                    </button>
+                    <button @click="quizType = 'spelling'"
+                            :class="quizType === 'spelling' ? 'bg-purple-200 border-slate-900 text-slate-900 font-bold' : 'bg-white text-slate-400 border-slate-200'"
+                            class="py-1.5 text-xs border rounded-xl cursor-pointer">
+                      ✍ 看中拼英挑戰
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <button 
+            @click="startQuiz"
+            class="w-full py-4 bg-emerald-400 hover:bg-emerald-500 text-[#1E293B] border-4 border-slate-900 font-black text-sm rounded-[20px] shadow-[4px_4px_0px_#1E293B] cursor-pointer transition-all active:translate-x-1 active:translate-y-1 active:shadow-none">
+            🚀 立刻發放試卷，開始答題！
+          </button>
+        </div>
+
+        <!-- Active Exam Screen -->
+        <div v-else-if="quizActive && !quizFinished" class="flex-1 flex flex-col gap-4">
+          <div class="flex justify-between items-center bg-slate-100 py-1.5 px-3 border-2 border-slate-300 rounded-xl text-xs font-black">
+            <span>題目：{{ currentQuizIdx + 1 }} / 10 題</span>
+            <span class="text-indigo-600">目前分數：{{ quizScore }} 分</span>
+          </div>
+
+          <!-- Question Content Block -->
+          <div class="flex-1 bg-white border-4 border-[#1E293B] rounded-3xl p-5 shadow-[4px_4px_0px_#1E293B] flex flex-col justify-between">
+            <div class="border-b border-dashed border-slate-200 pb-2">
+              <span class="text-[9px] uppercase font-bold text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded">
+                題目難度：{{ quizDifficulty === 'elementary' ? '國小 600' : '國中 2000' }}
+              </span>
+              
+              <!-- Speak Button -->
+              <button @click="speakWord(currentQuestion.word)" 
+                      class="float-right text-xs p-1 bg-slate-50 border border-slate-200 rounded">
+                🔊 發音
+              </button>
+            </div>
+
+            <!-- Question display -->
+            <div class="py-4 text-center">
+              <span v-if="quizType === 'choice'" class="text-[11px] text-slate-400 font-bold block mb-1">請選擇該單字的正確中文釋義：</span>
+              <span v-else class="text-[11px] text-slate-400 font-bold block mb-1">請在輸入框拼寫出對應的英文單字：</span>
+              
+              <!-- Large spelling or Choice prompt -->
+              <h3 v-if="quizType === 'choice'" class="text-3xl font-black text-[#1E293B] tracking-wide">
+                {{ currentQuestion.word }}
+              </h3>
+              <h3 v-else class="text-2xl font-black text-[#1E293B]">
+                {{ currentQuestion.chinese }}
+              </h3>
+            </div>
+
+            <!-- Quiz Type specific answers interface -->
+            <div class="mt-2 flex-1 flex flex-col justify-end">
+              
+              <!-- Choice Radio grid options -->
+              <div v-if="quizType === 'choice'" class="space-y-2">
+                <button 
+                  v-for="opt in currentQuestion.options" :key="opt"
+                  @click="submitChoiceAnswer(opt)"
+                  :disabled="quizSubmitted"
+                  :class="getChoiceOptionStyle(opt)"
+                  class="w-full text-left py-2.5 px-3.5 text-xs font-black border-2 rounded-xl transition-all flex justify-between items-center cursor-pointer">
+                  <span>{{ opt }}</span>
+                  <span v-if="quizSubmitted && opt === currentQuestion.chinese" class="text-emerald-600 font-bold">✔ 正確</span>
+                  <span v-if="quizSubmitted && selectedAnswer === opt && opt !== currentQuestion.chinese" class="text-rose-600 font-bold text-xs">✖</span>
+                </button>
+              </div>
+
+              <!-- Spelling Text field interface -->
+              <div v-else class="space-y-3">
+                <div class="flex gap-2">
+                  <input 
+                    type="text" 
+                    v-model="spellingInput" 
+                    :disabled="quizSubmitted"
+                    placeholder="請輸入英文單字..." 
+                    @keyup.enter="submitSpellingAnswer"
+                    class="flex-1 py-2 px-3 border-2 border-slate-300 rounded-xl text-xs outline-none focus:border-slate-800 uppercase mono-font font-bold" />
+                  <button 
+                    @click="submitSpellingAnswer"
+                    :disabled="quizSubmitted"
+                    class="py-2 px-4 bg-[#1E293B] text-white font-extrabold text-xs rounded-xl cursor-pointer">
+                    填入 🗳
+                  </button>
+                </div>
+                
+                <!-- Spelling feedback message -->
+                <div v-if="quizSubmitted" class="p-2.5 rounded-xl border-2" 
+                     :class="spellingCorrect ? 'bg-emerald-50 border-emerald-400 text-emerald-800' : 'bg-rose-50 border-rose-300 text-rose-800'">
+                  <div class="flex justify-between text-xs font-black">
+                    <span>{{ spellingCorrect ? '答對囉！太厲害了 +10 分 ⭐' : '答錯囉，再接再厲！' }}</span>
+                    <span>正解：<strong class="mono-font uppercase">{{ currentQuestion.word }}</strong></span>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Bottom Navigation inside Quiz -->
+          <div v-if="quizSubmitted" class="mb-1">
+            <button 
+              @click="nextQuizQuestion"
+              class="w-full py-3 bg-[#93C5FD] border-2 border-slate-900 rounded-2xl font-black text-slate-900 shadow-[2px_2px_0px_#1E293B] cursor-pointer text-center text-xs">
+              {{ currentQuizIdx !== 9 ? '下一題 ➡️' : '查看最終學習評語 🏁' }}
+            </button>
+          </div>
+        </div>
+
+        <!-- Exam Finished Summary Screen -->
+        <div v-else-if="quizFinished" class="flex-1 flex flex-col justify-between py-2 select-none">
+          <div class="text-center space-y-4">
+            <span class="text-5xl block animate-[wiggle_1s_infinite]">🏆</span>
+            <div>
+              <h3 class="text-xl font-black text-[#1E293B]">試卷答題完畢！👏</h3>
+              <p class="text-xs text-slate-400 mt-1">恭喜你完成本日的單字大腦訓練！</p>
+            </div>
+
+            <!-- Score badge -->
+            <div class="bg-indigo-50 border-4 border-[#1E293B] rounded-3xl p-5 shadow-[4px_4px_0px_#1E293B] inline-block w-4/5 mx-auto">
+              <span class="text-[10px] font-black text-slate-400 uppercase tracking-wider block">您的核心測驗分數</span>
+              <h2 class="text-4xl font-extrabold text-indigo-700 mt-1 mono-font">{{ quizScore }} / 100</h2>
+              
+              <!-- Custom cute evaluation comment -->
+              <p class="text-[11px] text-slate-600 font-black leading-snug mt-3">
+                👉 {{ getQuizEvaluationText() }}
+              </p>
+            </div>
+          </div>
+
+          <button 
+            @click="quizFinished = false; quizActive = false;"
+            class="w-full py-3.5 bg-slate-100 hover:bg-slate-200 border-2 border-slate-900 rounded-2xl font-black text-xs text-[#1E293B] shadow-[1px_2px_0px_#1E293B] cursor-pointer text-center">
+            🌌 感謝，回隨堂考主頁備戰
+          </button>
+        </div>
+
+      </div>
+
+    </main>
+
+    <!-- Bottom Navigation Bar Tabs / Artistic Aesthetic Custom Styling -->
+    <nav id="bottom-navigation-tabs" class="px-5 py-3 bg-white border-t-4 border-[#1E293B] flex justify-around items-center shrink-0">
+      <button 
+        @click="activeTab = 'study'; backToHome();"
+        :class="activeTab === 'study' ? 'text-[#1E293B] scale-105 font-bold' : 'text-slate-400 font-medium opacity-75'"
+        class="flex flex-col items-center gap-1 transition-all outline-none cursor-pointer">
+        <div class="w-7 h-7 rounded-lg border-2 border-slate-900 flex items-center justify-center transition-colors"
+             :class="activeTab === 'study' ? 'bg-amber-300' : 'bg-slate-100'">
+          ⚡
+        </div>
+        <span class="text-[11px] tracking-wide font-extrabold">卡片背誦</span>
+      </button>
+
+      <button 
+        @click="activeTab = 'bank'"
+        :class="activeTab === 'bank' ? 'text-[#1E293B] scale-105 font-bold' : 'text-slate-400 font-medium opacity-75'"
+        class="flex flex-col items-center gap-1 transition-all outline-none cursor-pointer">
+        <div class="w-7 h-7 rounded-lg border-2 border-slate-900 flex items-center justify-center transition-colors"
+             :class="activeTab === 'bank' ? 'bg-amber-300' : 'bg-slate-100'">
+          📚
+        </div>
+        <span class="text-[11px] tracking-wide font-extrabold">單字庫</span>
+      </button>
+
+      <button 
+        @click="activeTab = 'quiz'; quizActive = false; quizFinished = false;"
+        :class="activeTab === 'quiz' ? 'text-[#1E293B] scale-105 font-bold' : 'text-slate-400 font-medium opacity-75'"
+        class="flex flex-col items-center gap-1 transition-all outline-none cursor-pointer">
+        <div class="w-7 h-7 rounded-lg border-2 border-slate-900 flex items-center justify-center transition-colors"
+             :class="activeTab === 'quiz' ? 'bg-amber-300' : 'bg-slate-100'">
+          🧠
+        </div>
+        <span class="text-[11px] tracking-wide font-extrabold">隨堂考</span>
+      </button>
+    </nav>
+
+  </div>
+
+  <!-- External Vocabulary Database File -->
+  <script src="wordData.js"></script>
+
+  <script>
+    const categoryEmojis = {
+      "數字與時間": "⏰",
+      "顏色與形狀": "🎨",
+      "家人與人物": "👥",
+      "身體部位": "🦷",
+      "食物與飲料": "🍕",
+      "動物": "🦁",
+      "學校與文具": "✏️",
+      "家庭與房間": "🏠",
+      "衣服與物品": "👕",
+      "交通與地點": "🚗",
+      "自然與天氣": "☀️",
+      "運動與休閒": "⚽",
+      "常見動詞": "🎬",
+      "常見形容詞": "📝",
+      "常見副詞與介系詞": "📌",
+      "節日與生活常用字": "🎉",
+      "人物與家庭": "👥",
+      "學校與學習": "✏️",
+      "日常生活": "🍱",
+      "食物與健康": "🥗",
+      "居家與物品": "🏠",
+      "地點與交通": "🚗",
+      "自然與環境": "🌲",
+      "社會與文化": "🦁",
+      "科技與媒體": "💻",
+      "情緒與個性": "😊",
+      "常見副詞": "📌",
+      "介系詞與連接詞": "🔗",
+      "會考常見字": "🏆"
+    };
+
+    function getExampleSentences(word, chinese, category) {
+      if (!category || category === "junior" || category.includes("國中") || categoryEmojis[category] === undefined) {
+        return {
+          english: 'Let us learn this vocabulary "' + word + '" carefully in school.',
+          chinese: '讓我們在學校裡認真地學習這個單字「' + chinese + '」吧。'
+        };
+      }
+      return {
+        english: 'I really like to practice this word "' + word + '" in our class.',
+        chinese: '我真的很喜歡在課堂上練習這個單字「' + chinese + '」呢！'
+      };
+    }
+
+    const elementaryWordsList = E_ARRAY.map((str, index) => {
+      const [word, translation, category] = str.split('|');
+      const examples = getExampleSentences(word, translation, category);
+      return {
+        id: "elem-600-" + (index + 1),
+        word,
+        phonetic: "/" + word + "/",
+        partOfSpeech: "n.",
+        translation,
+        exampleSentence: examples.english,
+        exampleTranslation: examples.chinese,
+        category: category + " " + (categoryEmojis[category] || '🌱'),
+        difficulty: "elementary",
+        mnemonic: ""
+      };
+    });
+
+    const juniorWordsList = J_ARRAY.map((str, index) => {
+      const [word, translation, category] = str.split('|');
+      const examples = getExampleSentences(word, translation, category);
+      return {
+        id: "juni-2000-" + (index + 1),
+        word,
+        phonetic: "/" + word + "/",
+        partOfSpeech: "n.",
+        translation,
+        exampleSentence: examples.english,
+        exampleTranslation: examples.chinese,
+        category: category + " " + (categoryEmojis[category] || '🌱'),
+        difficulty: "junior",
+        mnemonic: ""
+      };
+    });
+
+    const STATIC_VOCABULARY_LIST = [...elementaryWordsList, ...juniorWordsList];
+
+    const { createApp, ref, computed, watch, onMounted } = Vue;
+
+    createApp({
+      setup() {
+        // Tab system
+        const activeTab = ref('study'); // study, bank, quiz
+        const studySubMode = ref('home'); // home, eng-to-chi, chi-to-eng, daily-new, daily-review, unknown-list
+        const selectedDifficulty = ref('elementary'); // elementary, junior
+        const bankDifficulty = ref('elementary');
+
+        // Vocab list state (Syncs with local database)
+        const vocabList = ref([]);
+        
+        // Progress statistics
+        const stats = ref({
+          stars: 12,
+          continuousDays: 3,
+          masteredCount: 0,
+          needsReviewCount: 2600,
+          difficultyProgress: {
+            elementary: { mastered: [], needsReview: [] },
+            junior: { mastered: [], needsReview: [] }
+          }
+        });
+
+        // Load files from storage on start up
+        const loadStoredData = () => {
+          try {
+            // Load custom words bank
+            const localCustom = localStorage.getItem('vocab_list_custom');
+            const parsedCustom = localCustom ? JSON.parse(localCustom) : [];
+            vocabList.value = [...STATIC_VOCABULARY_LIST, ...parsedCustom];
+
+            // Load user profile statistics
+            const localStats = localStorage.getItem('vocab_stats_v2');
+            if (localStats) {
+              stats.value = JSON.parse(localStats);
+            } else {
+              // Initial run, declare list of all word ids
+              const elemIds = vocabList.value.filter(i => i.difficulty === 'elementary').map(i => i.id);
+              const juniorIds = vocabList.value.filter(i => i.difficulty === 'junior').map(i => i.id);
+              stats.value = {
+                stars: 12,
+                continuousDays: 3,
+                masteredCount: 0,
+                needsReviewCount: vocabList.value.length,
+                difficultyProgress: {
+                  elementary: { mastered: [], needsReview: elemIds },
+                  junior: { mastered: [], needsReview: juniorIds }
+                }
+              };
+              saveStatsToLocalStorage();
+            }
+          } catch (e) {
+            vocabList.value = [...STATIC_VOCABULARY_LIST];
+          }
+        };
+
+        const saveStatsToLocalStorage = () => {
+          localStorage.setItem('vocab_stats_v2', JSON.stringify(stats.value));
+        };
+
+        // Date helper (YYYY-MM-DD)
+        const getTodayDateString = () => {
+          const d = new Date();
+          return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        };
+
+        // --- DAILY TASK TARGET SYSTEM ---
+        const dailyProgressElem = ref(null);
+        const dailyProgressJunior = ref(null);
+
+        const initDailyTaskIfNeeded = (level) => {
+          const todayStr = getTodayDateString();
+          const progressKey = level === 'elementary' ? 'dailyProgress_elementary' : 'dailyProgress_juniorHigh';
+          
+          let currentProgress = null;
+          try {
+            const localProgress = localStorage.getItem(progressKey);
+            currentProgress = localProgress ? JSON.parse(localProgress) : null;
+          } catch (e) {}
+
+          if (!currentProgress || currentProgress.date !== todayStr) {
+            const levelWords = vocabList.value.filter(w => w.difficulty === level);
+            const masteredIds = stats.value.difficultyProgress[level]?.mastered || [];
+            
+            // Unlearned candidates
+            const unlearned = levelWords.filter(w => !masteredIds.includes(w.id));
+            const todayNew = unlearned.slice(0, 10).map(w => w.id);
+
+            // Need review words list from the level
+            const unknownList = getStoredArray(level === 'elementary' ? 'unknownWords_elementary' : 'unknownWords_juniorHigh');
+            let reviewCandidates = [...unknownList];
+            
+            if (reviewCandidates.length < 10) {
+              const extraNeeded = 10 - reviewCandidates.length;
+              const extraIds = masteredIds.slice(0, extraNeeded);
+              reviewCandidates = [...reviewCandidates, ...extraIds];
+            }
+
+            const todayReview = reviewCandidates.slice(0, 10);
+            
+            currentProgress = {
+              date: todayStr,
+              newWordsDone: 0,
+              reviewWordsDone: 0,
+              todayNewWords: todayNew,
+              todayReviewWords: todayReview
+            };
+            localStorage.setItem(progressKey, JSON.stringify(currentProgress));
+          }
+
+          if (level === 'elementary') {
+            dailyProgressElem.value = currentProgress;
+          } else {
+            dailyProgressJunior.value = currentProgress;
+          }
+          return currentProgress;
+        };
+
+        // Load generic list storage arrays
+        const getStoredArray = (key) => {
+          try {
+            const local = localStorage.getItem(key);
+            return local ? JSON.parse(local) : [];
+          } catch (e) {
+            return [];
+          }
+        };
+
+        const setStoredArray = (key, array) => {
+          localStorage.setItem(key, JSON.stringify(array));
+        };
+
+        // Check if daily task statuses are met
+        const isDailyNewDone = () => {
+          const progress = selectedDifficulty.value === 'elementary' ? dailyProgressElem.value : dailyProgressJunior.value;
+          return progress && progress.newWordsDone >= 10;
+        };
+
+        const isDailyReviewDone = () => {
+          const progress = selectedDifficulty.value === 'elementary' ? dailyProgressElem.value : dailyProgressJunior.value;
+          return progress && progress.reviewWordsDone >= 10;
+        };
+
+        const getMasteryPercentage = () => {
+          const total = vocabList.value.filter(w => w.difficulty === selectedDifficulty.value).length;
+          if (total === 0) return 0;
+          const mastered = stats.value.difficultyProgress[selectedDifficulty.value]?.mastered?.length || 0;
+          return Math.round((mastered / total) * 100);
+        };
+
+        const getMasteredCount = () => {
+          return stats.value.difficultyProgress[selectedDifficulty.value]?.mastered?.length || 0;
+        };
+
+        // Level Words computation
+        const currentLevelWords = computed(() => {
+          return vocabList.value.filter(w => w.difficulty === selectedDifficulty.value);
+        });
+
+        // --- SUB ACTIVATES FLASHCARDS HUB ---
+        const activeFlashcards = ref([]);
+        const cardIndex = ref(0);
+        const isFlipped = ref(false);
+
+        const startFlashcards = (mode) => {
+          const words = currentLevelWords.value;
+          if (words.length === 0) {
+            alert('本清單目前沒有單字！');
+            return;
+          }
+          // Shuffle a random set of 20 words for quick card learning OR take all if small
+          activeFlashcards.value = [...words].sort(() => 0.5 - Math.random()).slice(0, 20);
+          cardIndex.value = 0;
+          isFlipped.value = false;
+          studySubMode.value = mode;
+        };
+
+        const nextCard = () => {
+          if (cardIndex.value < activeFlashcards.value.length - 1) {
+            cardIndex.value++;
+            isFlipped.value = false;
+          }
+        };
+
+        const prevCard = () => {
+          if (cardIndex.value > 0) {
+            cardIndex.value--;
+            isFlipped.value = false;
+          }
+        };
+
+        // --- DAILY ACTIVE CHALLENGES ---
+        const dailyIndex = ref(0);
+        const dailyShowTranslation = ref(false);
+
+        const startDailyNew = () => {
+          const progress = initDailyTaskIfNeeded(selectedDifficulty.value);
+          if (progress.todayNewWords.length === 0) {
+            alert('今日已無可預讀新單單字！');
+            return;
+          }
+          // Fetch word objects for the IDs listed in today's targets
+          activeFlashcards.value = progress.todayNewWords.map(id => vocabList.value.find(w => w.id === id)).filter(Boolean);
+          dailyIndex.value = 0;
+          dailyShowTranslation.value = false;
+          studySubMode.value = 'daily-new';
+        };
+
+        const startDailyReview = () => {
+          const progress = initDailyTaskIfNeeded(selectedDifficulty.value);
+          if (progress.todayReviewWords.length === 0) {
+            alert('大腦今天不需要深度背誦複寫特定單字喔！你可以手動前往卡片學習。');
+            return;
+          }
+          activeFlashcards.value = progress.todayReviewWords.map(id => vocabList.value.find(w => w.id === id)).filter(Boolean);
+          dailyIndex.value = 0;
+          dailyShowTranslation.value = false;
+          studySubMode.value = 'daily-review';
+        };
+
+        const getCurrentDailyList = () => {
+          return activeFlashcards.value;
+        };
+
+        const getCurrentDailyWord = () => {
+          return activeFlashcards.value[dailyIndex.value];
+        };
+
+        const getDailyIndex = () => {
+          return dailyIndex.value;
+        };
+
+        const getDailyShowTranslation = () => {
+          return dailyShowTranslation.value;
+        };
+
+        const setDailyShowTranslation = (val) => {
+          dailyShowTranslation.value = val;
+        };
+
+        const prevDailyWord = () => {
+          if (dailyIndex.value > 0) {
+            dailyIndex.value--;
+            dailyShowTranslation.value = false;
+          }
+        };
+
+        const nextDailyWord = () => {
+          if (dailyIndex.value < activeFlashcards.value.length - 1) {
+            dailyIndex.value++;
+            dailyShowTranslation.value = false;
+          }
+        };
+
+        const completeDailyTask = () => {
+          // Add reward stars
+          stats.value.stars += 5;
+          
+          const level = selectedDifficulty.value;
+          const progressKey = level === 'elementary' ? 'dailyProgress_elementary' : 'dailyProgress_juniorHigh';
+          const progress = level === 'elementary' ? dailyProgressElem.value : dailyProgressJunior.value;
+          
+          if (studySubMode.value === 'daily-new') {
+            progress.newWordsDone = 10;
+            // Add those 10 words into the mastered lists
+            const currentMastered = stats.value.difficultyProgress[level].mastered || [];
+            const newlyMastered = Array.from(new Set([...currentMastered, ...progress.todayNewWords]));
+            stats.value.difficultyProgress[level].mastered = newlyMastered;
+          } else {
+            progress.reviewWordsDone = 10;
+          }
+
+          localStorage.setItem(progressKey, JSON.stringify(progress));
+          saveStatsToLocalStorage();
+          
+          alert('🎉 任務大成功！大腦能量星星 +5 顆！請繼續堅持明天的全新任務喔！');
+          studySubMode.value = 'home';
+        };
+
+        // --- MARK AND HISTORY UNKNOWN WORDS DB ---
+        const getUnknownWords = () => {
+          const key = selectedDifficulty.value === 'elementary' ? 'unknownWords_elementary' : 'unknownWords_juniorHigh';
+          const ids = getStoredArray(key);
+          return ids.map(id => vocabList.value.find(w => w.id === id)).filter(Boolean);
+        };
+
+        const getUnknownWordsCount = () => {
+          const key = selectedDifficulty.value === 'elementary' ? 'unknownWords_elementary' : 'unknownWords_juniorHigh';
+          return getStoredArray(key).length;
+        };
+
+        const markRemembered = (wordObj) => {
+          if (!wordObj) return;
+          const level = wordObj.difficulty;
+          
+          // Remove from un熟 lists
+          const unknownKey = level === 'elementary' ? 'unknownWords_elementary' : 'unknownWords_juniorHigh';
+          const curUnknown = getStoredArray(unknownKey);
+          setStoredArray(unknownKey, curUnknown.filter(id => id !== wordObj.id));
+
+          // Push into mastered list
+          const curMastered = stats.value.difficultyProgress[level].mastered || [];
+          if (!curMastered.includes(wordObj.id)) {
+            stats.value.difficultyProgress[level].mastered.push(wordObj.id);
+            stats.value.stars += 1; // Reward 1 star
+            saveStatsToLocalStorage();
+          }
+
+          // Move forward card
+          if (studySubMode.value === 'eng-to-chi' || studySubMode.value === 'chi-to-eng') {
+            if (cardIndex.value === activeFlashcards.value.length - 1) {
+              alert('👏 太厲害了！本組所有的抽考閃卡都已瀏覽完畢！');
+              backToHome();
+            } else {
+              nextCard();
+            }
+          }
+        };
+
+        const markUnknown = (wordObj) => {
+          if (!wordObj) return;
+          const level = wordObj.difficulty;
+
+          // Push into un熟 list
+          const unknownKey = level === 'elementary' ? 'unknownWords_elementary' : 'unknownWords_juniorHigh';
+          const curUnknown = getStoredArray(unknownKey);
+          if (!curUnknown.includes(wordObj.id)) {
+            curUnknown.push(wordObj.id);
+            setStoredArray(unknownKey, curUnknown);
+          }
+
+          // Remove from mastered list
+          const mastered = stats.value.difficultyProgress[level].mastered || [];
+          stats.value.difficultyProgress[level].mastered = mastered.filter(id => id !== wordObj.id);
+          saveStatsToLocalStorage();
+
+          if (studySubMode.value === 'eng-to-chi' || studySubMode.value === 'chi-to-eng') {
+            if (cardIndex.value === activeFlashcards.value.length - 1) {
+              alert('已將不熟單字加入筆記。本段組卡片特訓告一段落，加油！');
+              backToHome();
+            } else {
+              nextCard();
+            }
+          } else {
+            nextDailyWord();
+          }
+        };
+
+        const removeUnknownWord = (wordObj) => {
+          const level = wordObj.difficulty;
+          const unknownKey = level === 'elementary' ? 'unknownWords_elementary' : 'unknownWords_juniorHigh';
+          const curUnknown = getStoredArray(unknownKey);
+          setStoredArray(unknownKey, curUnknown.filter(id => id !== wordObj.id));
+
+          // Save back as mastered
+          const curMastered = stats.value.difficultyProgress[level].mastered || [];
+          if (!curMastered.includes(wordObj.id)) {
+            stats.value.difficultyProgress[level].mastered.push(wordObj.id);
+            saveStatsToLocalStorage();
+          }
+        };
+
+        const startUnknownList = () => {
+          studySubMode.value = 'unknown-list';
+        };
+
+        const startUnknownFlashcards = () => {
+          activeFlashcards.value = getUnknownWords();
+          cardIndex.value = 0;
+          isFlipped.value = false;
+          studySubMode.value = 'eng-to-chi';
+        };
+
+        // --- WORD BANK VIEWS ---
+        const searchQuery = ref('');
+        const customInputWord = ref('');
+        const customInputTranslation = ref('');
+
+        const getFilteredBankWords = () => {
+          const levelWords = vocabList.value.filter(w => w.difficulty === bankDifficulty.value);
+          const q = searchQuery.value.trim().toLowerCase();
+          if (!q) return levelWords;
+          return levelWords.filter(w => 
+            w.word.toLowerCase().includes(q) || 
+            w.translation.includes(q)
+          );
+        };
+
+        const isWordRemembered = (wordObj) => {
+          const l = wordObj.difficulty;
+          return stats.value.difficultyProgress[l]?.mastered?.includes(wordObj.id);
+        };
+
+        const isWordInUnknown = (wordObj) => {
+          const l = wordObj.difficulty;
+          const k = l === 'elementary' ? 'unknownWords_elementary' : 'unknownWords_juniorHigh';
+          return getStoredArray(k).includes(wordObj.id);
+        };
+
+        // Add custom local notes vocabulary
+        const addCustomWord = () => {
+          const w = customInputWord.value.trim();
+          const t = customInputTranslation.value.trim();
+          if (!w || !t) {
+            alert('請完整填寫英文、中文內容以便大腦辨認記錄喔！');
+            return;
+          }
+          
+          const customObj = {
+            id: 'custom-' + Date.now(),
+            word: w,
+            phonetic: '/' + w + '/',
+            partOfSpeech: 'n.',
+            translation: t,
+            exampleSentence: 'This banana is customized context.',
+            exampleTranslation: '這是自創的精美小單字！',
+            category: '自創主題 🧩',
+            difficulty: bankDifficulty.value,
+            mnemonic: '自編趣味筆記'
+          };
+
+          const localCustom = localStorage.getItem('vocab_list_custom');
+          const parsedCustom = localCustom ? JSON.parse(localCustom) : [];
+          parsedCustom.push(customObj);
+          localStorage.setItem('vocab_list_custom', JSON.stringify(parsedCustom));
+
+          // Reload state
+          loadStoredData();
+          customInputWord.value = '';
+          customInputTranslation.value = '';
+          stats.value.stars += 3; // +3 reward stars
+          saveStatsToLocalStorage();
+
+          alert('🎉 加入成功！恭喜獲得創造力星星 +3 ⭐');
+        };
+
+        // --- QUIZ GAME LOGIC ---
+        const quizDifficulty = ref('elementary');
+        const quizType = ref('choice'); // choice, spelling
+        const quizActive = ref(false);
+        const quizFinished = ref(false);
+        const quizQuestions = ref([]);
+        const currentQuizIdx = ref(0);
+        const currentQuestion = ref(null);
+        const selectedAnswer = ref(null);
+        const quizSubmitted = ref(false);
+        const quizScore = ref(0);
+
+        // spelling quiz binds
+        const spellingInput = ref('');
+        const spellingCorrect = ref(false);
+
+        const startQuiz = () => {
+          const pool = vocabList.value.filter(w => w.difficulty === quizDifficulty.value);
+          if (pool.length < 5) {
+            alert('該難度字庫過少，無法出題！');
+            return;
+          }
+
+          // Random sample 10 words
+          const selectedWords = [...pool].sort(() => 0.5 - Math.random()).slice(0, 10);
+          quizQuestions.value = selectedWords.map(w => {
+            // Generate multiple choice options from translation list
+            const distractors = pool
+              .filter(p => p.translation !== w.translation)
+              .sort(() => 0.5 - Math.random())
+              .slice(0, 3)
+              .map(p => p.translation);
+            
+            const options = [...distractors, w.translation].sort(() => 0.5 - Math.random());
+            
+            return {
+              id: w.id,
+              word: w.word,
+              phonetic: w.phonetic,
+              chinese: w.translation,
+              partOfSpeech: w.partOfSpeech,
+              options: options
+            };
+          });
+
+          currentQuizIdx.value = 0;
+          currentQuestion.value = quizQuestions.value[0];
+          quizActive.value = true;
+          quizFinished.value = false;
+          quizSubmitted.value = false;
+          selectedAnswer.value = null;
+          quizScore.value = 0;
+          spellingInput.value = '';
+        };
+
+        const submitChoiceAnswer = (opt) => {
+          if (quizSubmitted.value) return;
+          selectedAnswer.value = opt;
+          quizSubmitted.value = true;
+          
+          if (opt === currentQuestion.value.chinese) {
+            quizScore.value += 10;
+            // Add custom visual effect or audio logic if needed
+          }
+        };
+
+        const submitSpellingAnswer = () => {
+          if (quizSubmitted.value) return;
+          const ans = spellingInput.value.trim().toLowerCase();
+          const target = currentQuestion.value.word.trim().toLowerCase();
+          
+          spellingCorrect.value = ans === target;
+          quizSubmitted.value = true;
+          
+          if (spellingCorrect.value) {
+            quizScore.value += 10;
+          }
+        };
+
+        const nextQuizQuestion = () => {
+          if (currentQuizIdx.value < 9) {
+            currentQuizIdx.value++;
+            currentQuestion.value = quizQuestions.value[currentQuizIdx.value];
+            quizSubmitted.value = false;
+            selectedAnswer.value = null;
+            spellingInput.value = '';
+          } else {
+            quizActive.value = false;
+            quizFinished.value = true;
+            // Earn stats stars from performance score
+            const starsEarned = Math.floor(quizScore.value / 10);
+            stats.value.stars += starsEarned;
+            saveStatsToLocalStorage();
+          }
+        };
+
+        const getChoiceOptionStyle = (opt) => {
+          if (!quizSubmitted.value) {
+            return 'bg-white border-slate-300 text-slate-800 hover:bg-slate-50';
+          }
+          if (opt === currentQuestion.value.chinese) {
+            return 'bg-emerald-100 border-emerald-500 text-emerald-900 border-4 scale-[1.01]';
+          }
+          if (selectedAnswer.value === opt && opt !== currentQuestion.value.chinese) {
+            return 'bg-rose-100 border-rose-400 text-rose-950';
+          }
+          return 'bg-white border-slate-200 text-slate-400 opacity-60';
+        };
+
+        const getQuizEvaluationText = () => {
+          const s = quizScore.value;
+          if (s === 100) return '🏆 神級字彙天才！完美的 100 分！大腦星空全部解鎖，建議往更高難度衝刺！';
+          if (s >= 80) return '🦁 太棒了！拿到傲人高分！單字音形意掌握精緻，稍微複習即可大功告成！';
+          if (s >= 60) return '🥗 等級合格 उत्तीर्ण！你已打下良好英文字彙底子，多點擊「卡片」背誦不熟字！';
+          return '🌱 加油小豆芽！目前分數較低，別灰心，多玩玩大腦閃卡，累積星星必定能突飛猛進！';
+        };
+
+        // --- UTILITY SPEECH & ALERTS ---
+        const speakWord = (text) => {
+          if ('speechSynthesis' in window) {
+            window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'en-US';
+            utterance.rate = 0.85;
+            window.speechSynthesis.speak(utterance);
+          } else {
+            alert('本地瀏覽器未支援語音發音核心技術！');
+          }
+        };
+
+        const getPhoneticDisplay = (item) => {
+          if (!item) return '';
+          if (item.phonetic && item.phonetic !== '/' + item.word + '/') {
+            return item.phonetic;
+          }
+          return '/' + item.word + '/';
+        };
+
+        const alertStarsRule = () => {
+          alert('⭐ 星星成長大本營規則：\n- 答對卡片：+1 星星星\n- 自訂魔法生字：+3 顆創造力星星\n- 通關隨堂測驗：每答對 1 題贈送 +1 顆大腦星！\n\n努力點亮你的英文成長星座吧！');
+        };
+
+        const backToHome = () => {
+          studySubMode.value = 'home';
+        };
+
+        const setDifficulty = (level) => {
+          selectedDifficulty.value = level;
+          initDailyTaskIfNeeded(level);
+        };
+
+        const elementaryWords = computed(() => {
+          return vocabList.value.filter(w => w.difficulty === 'elementary' && !w.id.startsWith('custom-'));
+        });
+
+        const juniorHighWords = computed(() => {
+          return vocabList.value.filter(w => w.difficulty === 'junior' && !w.id.startsWith('custom-'));
+        });
+
+        // Life cycle hook loading
+        onMounted(() => {
+          loadStoredData();
+          initDailyTaskIfNeeded('elementary');
+          initDailyTaskIfNeeded('junior');
+        });
+
+        return {
+          elementaryWords,
+          juniorHighWords,
+          activeTab,
+          studySubMode,
+          selectedDifficulty,
+          bankDifficulty,
+          vocabList,
+          stats,
+          dailyProgressElem,
+          dailyProgressJunior,
+          activeFlashcards,
+          cardIndex,
+          isFlipped,
+          dailyIndex,
+          dailyShowTranslation,
+          searchQuery,
+          customInputWord,
+          customInputTranslation,
+          quizDifficulty,
+          quizType,
+          quizActive,
+          quizFinished,
+          currentQuizIdx,
+          currentQuestion,
+          selectedAnswer,
+          quizSubmitted,
+          quizScore,
+          spellingInput,
+          spellingCorrect,
+          currentLevelWords,
+          setDifficulty,
+          getMasteryPercentage,
+          getMasteredCount,
+          startFlashcards,
+          nextCard,
+          prevCard,
+          getPhoneticDisplay,
+          speakWord,
+          markRemembered,
+          markUnknown,
+          startDailyNew,
+          startDailyReview,
+          getCurrentDailyList,
+          getCurrentDailyWord,
+          getDailyIndex,
+          getDailyShowTranslation,
+          setDailyShowTranslation,
+          prevDailyWord,
+          nextDailyWord,
+          completeDailyTask,
+          getUnknownWords,
+          getUnknownWordsCount,
+          removeUnknownWord,
+          startUnknownList,
+          startUnknownFlashcards,
+          getFilteredBankWords,
+          isWordRemembered,
+          isWordInUnknown,
+          addCustomWord,
+          startQuiz,
+          submitChoiceAnswer,
+          submitSpellingAnswer,
+          nextQuizQuestion,
+          getChoiceOptionStyle,
+          getQuizEvaluationText,
+          alertStarsRule,
+          backToHome,
+          isDailyNewDone,
+          isDailyReviewDone
+        };
+      }
+    }).mount('#app');
+  </script>
+</body>
+</html>
